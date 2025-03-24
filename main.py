@@ -88,13 +88,10 @@ def get_word_frequency(text: str) -> Dict[str, int]:
 # 샘플 문장들의 임베딩을 미리 계산
 sample_embeddings = [get_embedding(sentence) for sentence in sample_sentences]
 
-@app.post("/find_similar", response_model=FindSimilarResponse, tags=["유사도 검색"])
+@app.post("/find_similar")
 async def find_similar(query: str = Form(...), top_k: int = Form(3)):
     # 입력된 쿼리의 임베딩 계산
     query_embedding = get_embedding(query)
-    
-    # 단어 빈도수 계산
-    query_word_freq = get_word_frequency(query)
     
     # 코사인 유사도 계산
     query_embedding = np.array(query_embedding)
@@ -109,18 +106,12 @@ async def find_similar(query: str = Form(...), top_k: int = Form(3)):
     
     results = []
     for idx in top_indices:
-        # 각 유사 문장의 단어 빈도수도 계산
-        sentence_word_freq = get_word_frequency(sample_sentences[idx])
         results.append({
             "sentence": sample_sentences[idx],
-            "similarity": float(similarities[idx]),
-            "word_frequency": sentence_word_freq
+            "similarity": float(similarities[idx])
         })
     
-    return {
-        "query_word_frequency": query_word_freq,
-        "results": results
-    }
+    return {"results": results}
 
 @app.get("/word_statistics", response_model=WordStatisticsResponse, tags=["통계"])
 async def get_word_statistics():
